@@ -121,7 +121,7 @@ macro "Extract_Images" {
 //		Test if file format recognized by BioFormats (fast)
 		run("Bio-Formats Macro Extensions");
 		FILE_NAME = ALL_NAMES[n];
-		Ext.isThisType(FILE_NAME, IM_TYPE);
+		Ext.isThisType(INPUT_DIR + FILE_NAME, IM_TYPE);
 //		print(FILE_NAME);
 //		print(IM_TYPE);
 
