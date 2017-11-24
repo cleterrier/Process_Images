@@ -25,6 +25,7 @@ macro "Make_Projections" {
 	BG_DEF = false;
 	UNSHARP_DEF = false;
 	PROJ_METHOD_DEF = "Max Intensity";
+	REM_SL_DEF = false;
 	SAVE_DEF="In a folder next to the source folder";
 
 	// Get the folder name 
@@ -35,7 +36,7 @@ macro "Make_Projections" {
 	print("INPUT_DIR :"+INPUT_DIR);
 	
 	// Initialize choices variables
-	PROJ_ARRAY = newArray("Max Intensity", "Average Intensity", "Sum Slices");
+	PROJ_ARRAY = newArray("None", "Max Intensity", "Average Intensity", "Sum Slices");
 	SAVE_ARRAY = newArray("In the source folder", "In a subfolder of the source folder", "In a folder next to the source folder", "In a subfolder with custom location");
 
 
@@ -43,6 +44,7 @@ macro "Make_Projections" {
 
 	// Creation of the dialog box
 	Dialog.create("Make_Projections Options");
+	Dialog.addCheckbox("Remove Lower Slices", REM_SL_DEF);
 	Dialog.addCheckbox("Outlier filtering before projection", SIGMA_DEF);
 	Dialog.addCheckbox("Background subtraction before projection", BG_DEF);
 	Dialog.addCheckbox("Unsharp Mask before projection", UNSHARP_DEF);
@@ -51,12 +53,12 @@ macro "Make_Projections" {
 	Dialog.show();
 	
 	// Feeding variables from dialog choices
+	REM_SL = Dialog.getCheckbox();
 	SIGMA = Dialog.getCheckbox();
 	BG = Dialog.getCheckbox();
 	UNSHARP = Dialog.getCheckbox();
-	PROJ_METHOD = Dialog.getChoice();	
+	PROJ_METHOD = Dialog.getChoice();
 	SAVE_TYPE = Dialog.getChoice();
-	
 	
 	// Get all file names
 	ALL_NAMES=getFileList(INPUT_DIR);
@@ -145,6 +147,24 @@ macro "Make_Projections" {
 			open(FILE_PATH);
 			STACK_ID = getImageID();
 
+			// Remove lower slices (below the slice that has the maximum mean intensity)
+			if (REM_SL == true) {
+				run("Select All");
+				setSlice(1);
+				getStatistics(RoiA, MaxM);
+				MaxI = 1;			
+				for (i = 2; i < nSlices + 1; i++) {
+					setSlice(i);
+					getStatistics(RoiA, RoiM);				
+					if (RoiM > MaxM) {
+						MaxI = i;
+						MaxM = RoiM;
+					}	
+				}
+				setSlice(1);
+				for (i = 1; i < MaxI; i++) run("Delete Slice");		
+			}
+			
 			// Optional outlier pixels filtering before projection
 			if (SIGMA == true) {
 				run("Remove Outliers", "block_radius_x=3 block_radius_y=3 standard_deviations=3 stack");
@@ -156,12 +176,12 @@ macro "Make_Projections" {
 			}
 
 			if (UNSHARP == true) {
-					run("Unsharp Mask...", "radius=" + UNSHARP_RADIUS + " mask=" + UNSHARP_MASK + " stack");
+				run("Unsharp Mask...", "radius=" + UNSHARP_RADIUS + " mask=" + UNSHARP_MASK + " stack");
 			}
 			
 			// Perform the projection
-			if (nSlices > 1) run("Z Project...", " projection=[" + PROJ_METHOD + "]");
-			else run("Duplicate...", "title=dummy");
+			if (nSlices > 1 && PROJ_METHOD != "None") run("Z Project...", " projection=[" + PROJ_METHOD + "]");
+			else run("Duplicate...", "title=dummy duplicate");
 			PROJ_ID = getImageID();
 
 
