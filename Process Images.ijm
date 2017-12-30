@@ -8,7 +8,7 @@ macro "Extract Images Action Tool - C143D28CeeeDc6C9aaD0cDdcC37aD4aCeffD19CabdD8
 
 	run("Extract Images");
 
-} 
+}
 
 // Tool 15
 
@@ -16,7 +16,7 @@ macro "Make Projections Action Tool - C588D78CeffD3aD4bD5bD6bD7bD8bD9bDabDbbDcbD
 
 	run("Make Projections");
 
-} 
+}
 
 // Tool 16
 

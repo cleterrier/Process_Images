@@ -12,7 +12,7 @@
 
 macro "Extract_Images" {
 
-//*************** Initialization *************** 
+//*************** Initialization ***************
 
 //	Save Settings
 	saveSettings();
@@ -24,19 +24,19 @@ macro "Extract_Images" {
 	SAVE_DEF = "In a folder next to the source folder";
 	POS_DEF = false;
 
-//	Initialize choices variables	
+//	Initialize choices variables
 //	Old options: "'Extracted' in the 'Data Edit' folder (relative)", "'Extracted' in the 'Data Edit' folder (absolute)", "Same folder in the 'Data Edit' folder"
 	SAVE_ARRAY = newArray("In the source folder", "In a subfolder of the source folder", "In a folder next to the source folder", "In a folder with custom location");
-	
-//*************** Dialog 1 : get the input images folder path *************** 
+
+//*************** Dialog 1 : get the input images folder path ***************
 
 	INPUT_DIR = getDirectory("Select a source folder with raw images");
-	
+
 	print("\n\n\n*** Extract_Images Log ***");
 	print("");
 	print("INPUT_DIR: " + INPUT_DIR);
 
-	
+
 //*************** Dialog 2 : options ***************
 
 //	Creation of the dialog box
@@ -47,7 +47,7 @@ macro "Extract_Images" {
 	Dialog.addChoice("Save Images", SAVE_ARRAY, SAVE_DEF);
 	Dialog.addCheckbox("Save position in name", POS_DEF);
 	Dialog.show();
-	
+
 //	Feeding variables from dialog choices
 	RESET_SCALE = Dialog.getCheckbox();
 	CATCH_ROIS = Dialog.getCheckbox();
@@ -58,10 +58,11 @@ macro "Extract_Images" {
 	setBatchMode(true);
 
 
-//*************** Prepare Processing (get names, open images, make output folder) ***************	
-	
+//*************** Prepare Processing (get names, open images, make output folder) ***************
+
 //	Get all file names
 	ALL_NAMES = getFileList(INPUT_DIR);
+	Array.sort(ALL_NAMES);
 	ALL_EXT = newArray(ALL_NAMES.length);
 //	Create extensions array
 	for (i = 0; i < ALL_NAMES.length; i++) {
@@ -81,14 +82,14 @@ macro "Extract_Images" {
 	if (SAVE_TYPE == "In the source folder") {
 		OUTPUT_DIR = INPUT_DIR;
 	}
-	
+
 	if (SAVE_TYPE == "In a subfolder of the source folder") {
 		OUTPUT_DIR = INPUT_DIR + FOLDER_NAME + File.separator;
 		if (File.isDirectory(OUTPUT_DIR) == false) {
 			File.makeDirectory(OUTPUT_DIR);
 		}
 	}
-	
+
 	if (SAVE_TYPE == "In a folder next to the source folder") {
 		OUTPUT_DIR = File.getParent(INPUT_DIR);
 		OUTPUT_NAME = File.getName(INPUT_DIR);
@@ -99,7 +100,7 @@ macro "Extract_Images" {
 			File.makeDirectory(OUTPUT_DIR);
 		}
 	}
-	
+
 	if (SAVE_TYPE == "In a folder with custom location") {
 		OUTPUT_DIR = getDirectory("Choose the custom location for the 'Extracted' folder");
 		OUTPUT_DIR = OUTPUT_DIR + File.separator + FOLDER_NAME + File.separator;
@@ -107,17 +108,17 @@ macro "Extract_Images" {
 			File.makeDirectory(OUTPUT_DIR);
 		}
 	}
-	
+
 	OUTPUT_PARENT_DIR = File.getParent(OUTPUT_DIR);
-	
+
 	print("OUTPUT_DIR: " + OUTPUT_DIR);
 //	print("OUTPUT_PARENT_DIR: " + OUTPUT_PARENT_DIR);
-	
+
 //*************** Process Images ***************
 
 //	Loop on all .zvi or .lsm extensions
 	for (n = 0; n < ALL_EXT.length; n++) {
-		
+
 //		Test if file format recognized by BioFormats (fast)
 		run("Bio-Formats Macro Extensions");
 		FILE_NAME = ALL_NAMES[n];
@@ -126,32 +127,32 @@ macro "Extract_Images" {
 //		print(IM_TYPE);
 
 		if (IM_TYPE == "true" || ALL_EXT[n] == ".nd2") {
-			
+
 //		Bio Format Importer to open the multi-channel images
 //			Get the file path
 			FILE_PATH = INPUT_DIR + FILE_NAME;
-			
+
 //			Store components of the file name
 			FILE_DIR = File.getParent(FILE_PATH);
 			FILE_SEP = getFileExtension(FILE_NAME);
 			FILE_SHORTNAME = FILE_SEP[0];
 			FILE_EXT = FILE_SEP[1];
-		
-			print("");	
+
+			print("");
 			print("INPUT_PATH:", FILE_PATH);
-//			print("FILE_NAME:", FILE_NAME);	
+//			print("FILE_NAME:", FILE_NAME);
 //			print("FILE_DIR:", FILE_DIR);
 //			print("FILE_EXT:", FILE_EXT);
 //			print("FILE_SHORTNAME:", FILE_SHORTNAME);
 
 //			Start BioFormats and get series number in file.
-//			print("Setting Bio-Formats Id...");			
+//			print("Setting Bio-Formats Id...");
 			Ext.setGroupFiles("false");
 			Ext.setId(FILE_PATH);
 			Ext.getEffectiveSizeC(CHANNEL_COUNT);
-			print("Bio-Formats Id Set");			
+			print("Bio-Formats Id Set");
 //			showStatus("launching Bio-Formats Importer");
-//			print("Launching Bio-Formats Importer...");			
+//			print("Launching Bio-Formats Importer...");
 
 //			07-09-2011 added display_rois (added to ROI Manager)
 //			27-09-2011 made display_rois optionnal to speed things up
@@ -172,9 +173,9 @@ macro "Extract_Images" {
 //			Reset spatial scale of images if checked
 			if (RESET_SCALE == true) {
 				print("Scale reset");
-				run("Set Scale...", "distance=0 known=1 pixel=1 unit=pixel"); 
+				run("Set Scale...", "distance=0 known=1 pixel=1 unit=pixel");
 			}
-			
+
 //			Put ROIs in overlay if there is one and the option is set
 			if (CATCH_ROIS==true) {
 				if (roiManager("count") > 0) {
@@ -190,30 +191,30 @@ macro "Extract_Images" {
 		 		postring = "_(" + posX + "," + posY + ")";
 		 	}
 		 	else postring = "";
-		 
 
-//			If option checked, breaks the multi-channel image appart and saves as individual tifs						
+
+//			If option checked, breaks the multi-channel image appart and saves as individual tifs
 			if (SPLIT_CH == true && nSlices > 1) {
 				run("Split Channels");
 //				Loop on each channel (each opened window)
 				for(j = 0; j < CHANNEL_COUNT; j++) {
-					
+
 //					Construct window name (from the names created by the "Split Channels" command)
 					TEMP_CHANNEL = d2s(j+1,0);
 					SOURCE_WINDOW_NAME = "C" + TEMP_CHANNEL +  "-" + FILE_NAME;
-					
+
 //					Select source image
 					selectWindow(SOURCE_WINDOW_NAME);
 					resetMinAndMax();
-				
+
 //					Create output file path and save the output image
 					OUTPUT_PATH = OUTPUT_DIR + FILE_SHORTNAME + postring + "-C=" + j + ".tif";
 					save(OUTPUT_PATH);
 					print("OUTPUT_PATH: " + OUTPUT_PATH);
-					close();				
-				}	// end of FOR loop on channels	
+					close();
+				}	// end of FOR loop on channels
 			}
-			
+
 			else {
 				// Create output file path and save the output image
 				OUTPUT_PATH = OUTPUT_DIR + FILE_SHORTNAME + postring + ".tif";
@@ -228,7 +229,7 @@ macro "Extract_Images" {
 
 	// Restore settings
 	restoreSettings();
-	setBatchMode("exit and display");	
+	setBatchMode("exit and display");
 	print("");
 	print("*** Extract_Images end ***");
 	showStatus("Extract Images finished");
