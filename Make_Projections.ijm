@@ -63,9 +63,10 @@ macro "Make_Projections" {
 	// Get all file names
 	ALL_NAMES=getFileList(INPUT_DIR);
 	Array.sort(ALL_NAMES);
-	ALL_EXT=newArray(ALL_NAMES.length);
+	N_LENGTH = ALL_NAMES.length;
+	ALL_EXT=newArray(N_LENGTH);
 	// Create extensions array
-	for (i = 0; i < ALL_NAMES.length; i++) {
+	for (i = 0; i < N_LENGTH; i++) {
 	//	print(ALL_NAMES[i]);
 		ALL_NAMES_PARTS = getFileExtension(ALL_NAMES[i]);
 		ALL_EXT[i] = ALL_NAMES_PARTS[1];
@@ -125,7 +126,7 @@ macro "Make_Projections" {
 //*************** Processing  ***************
 
 	// Loop on all .tif extensions
-	for (n=0; n<ALL_EXT.length; n++) {
+	for (n=0; n<N_LENGTH; n++) {
 		if (ALL_EXT[n]==".tif") {
 
 			// Get the file path
@@ -164,6 +165,7 @@ macro "Make_Projections" {
 				}
 				setSlice(1);
 				for (i = 1; i < MaxI; i++) run("Delete Slice");
+				print("removed slices 1 to" + MaxI);
 			}
 
 			// Optional outlier pixels filtering before projection

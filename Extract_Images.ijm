@@ -63,9 +63,10 @@ macro "Extract_Images" {
 //	Get all file names
 	ALL_NAMES = getFileList(INPUT_DIR);
 	Array.sort(ALL_NAMES);
-	ALL_EXT = newArray(ALL_NAMES.length);
+	N_LENGTH = ALL_NAMES.length;
+	ALL_EXT = newArray(N_LENGTH);
 //	Create extensions array
-	for (i = 0; i < ALL_NAMES.length; i++) {
+	for (i = 0; i < N_LENGTH; i++) {
 //		print(ALL_NAMES[i]);
 		ALL_NAMES_PARTS = getFileExtension(ALL_NAMES[i]);
 		ALL_EXT[i] = ALL_NAMES_PARTS[1];
@@ -117,7 +118,7 @@ macro "Extract_Images" {
 //*************** Process Images ***************
 
 //	Loop on all .zvi or .lsm extensions
-	for (n = 0; n < ALL_EXT.length; n++) {
+	for (n = 0; n < N_LENGTH; n++) {
 
 //		Test if file format recognized by BioFormats (fast)
 		run("Bio-Formats Macro Extensions");

@@ -50,9 +50,10 @@ macro "Generate_Stacks_Folder" {
 
 	// Count the number of files ending with ".tif" as the number of images
 	ALL_NAMES = getFileList(INPUT_DIR);
+	N_LENGTH = ALL_NAMES.length;
 	Array.sort(ALL_NAMES);
 	IMAGE_NUMBER = 0;
-	for (i = 0; i < ALL_NAMES.length; i++) {
+	for (i = 0; i < N_LENGTH; i++) {
 		LENGTH = lengthOf(ALL_NAMES[i]);
 		if (substring(ALL_NAMES[i],LENGTH-4,LENGTH) == ".tif") {
 			IMAGE_NUMBER ++;
@@ -62,7 +63,7 @@ macro "Generate_Stacks_Folder" {
 
 	// Array that stores the images names
 	IMAGE_NAMES = newArray(IMAGE_NUMBER);
-	for (i = 0; i < ALL_NAMES.length; i++) {
+	for (i = 0; i < N_LENGTH; i++) {
 		LENGTH = lengthOf(ALL_NAMES[i]);
 		if (substring(ALL_NAMES[i], LENGTH-4, LENGTH) == ".tif") {
 			IMAGE_NAMES[i] = ALL_NAMES[i];
