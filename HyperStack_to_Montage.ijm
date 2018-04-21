@@ -20,7 +20,7 @@ macro HyperStack_to_Montage {
 	for (c = 0; c < inChannels; c++) {
 		imageName = "C" + (c+1) + "-" + inTitle;
 		selectWindow(imageName);
-		run(" Grays ");
+		run("Grays");
 		run("RGB Color");
 		run("Canvas Size...", "width=" + (inWidth + margin)+ " height=" + inHeight + " position=Center-Left");
 		makeRectangle(inWidth, 0, margin, inHeight);
