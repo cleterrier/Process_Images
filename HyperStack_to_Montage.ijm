@@ -1,6 +1,6 @@
 macro HyperStack_to_Montage {
 
-	setBatchMode(true);
+//	setBatchMode(true);
 	margin = 5;
 	
 	inID = getImageID();
@@ -51,7 +51,7 @@ macro HyperStack_to_Montage {
 	}
 	Stack.setPosition(1, 1, 1);	
 	
-	setBatchMode("exit and display");
+//	setBatchMode("exit and display");
 
 }
 
