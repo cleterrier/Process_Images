@@ -1,6 +1,6 @@
 macro HyperStack_to_Montage {
 
-//	setBatchMode("true");
+	setBatchMode(true);
 	margin = 5;
 	
 	inID = getImageID();
@@ -10,42 +10,48 @@ macro HyperStack_to_Montage {
 	outLabels = getLabels(inID);
 
 
+	
+	selectImage(inID);
 	run("Stack to RGB", "slices keep");
 	rename("RGB");
 	rgbID = getImageID();
-
+	
 	selectImage(inID);
-	run("Split Channels");
-
-	for (c = 0; c < inChannels; c++) {
-		imageName = "C" + (c+1) + "-" + inTitle;
-		selectWindow(imageName);
+	splitIDs = newArray(inChannels);
+	splitTitles = newArray(inChannels);
+	
+	for (i = 0; i < inChannels; i++) {
+		selectImage(inID);
+		currC = i + 1;
+		run("Duplicate...", "duplicate channels=" + currC);
+		splitIDs[i] = getImageID();
+		splitTitles[i] = getTitle();
+		
 		run("Grays");
 		run("RGB Color");
 		run("Canvas Size...", "width=" + (inWidth + margin)+ " height=" + inHeight + " position=Center-Left");
 		makeRectangle(inWidth, 0, margin, inHeight);
 		setForegroundColor(255, 255, 255);
 		run("Fill", "stack");
-		//waitForUser("check");
-		if (c > 0) {
-			previousName = "C" + c + "-" + inTitle;
-			run("Combine...", "stack1=[" + previousName + "] stack2=[" + imageName + "]");
-			rename(imageName);
+		
+		if (i > 0) {
+			run("Combine...", "stack1=[" + splitTitles[i-1] + "] stack2=[" + splitTitles[i] + "]");
+			rename(splitTitles[i]);
 			combineID = getImageID();
 		}
 	}
 	
-	run("Combine...", "stack1=[" + imageName + "] stack2=[RGB]");
+	run("Combine...", "stack1=[" + splitTitles[inChannels - 1] + "] stack2=[RGB]");
 	finalID = getImageID();
 	rename(stripExt(inTitle) + "_Montage.tif");
 
-	for (s = 0; s < inSlices; s++) {
-		Stack.setPosition(1, s + 1, 1);
-		setMetadata("Label", outLabels[s]);
+	for (j = 0; j < inSlices; j++) {
+		Stack.setPosition(1, j + 1, 1);
+		setMetadata("Label", outLabels[j]);
 	}
 	Stack.setPosition(1, 1, 1);	
 	
-//	setBatchMode("exit and display");
+	setBatchMode("exit and display");
 
 }
 
