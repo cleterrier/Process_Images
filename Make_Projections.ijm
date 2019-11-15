@@ -10,6 +10,7 @@
 //
 // 31/03/13 Added background subtraction before projection (rolling ball 50 px sliding paraboloid)
 // 05/02/14 removed the "-proj" text in the exported projection names
+// 07/10/2019 Added Z-stzack registration using HyperStackReg (https://github.com/ved-sharma/HyperStackReg)
 
 macro "Make_Projections" {
 
@@ -21,11 +22,12 @@ macro "Make_Projections" {
 	UNSHARP_MASK = 0.3;
 
 	// Default values for the Options Panel
+	REG_DEF = false;
+	REM_SL_DEF = false;
 	SIGMA_DEF = false;
 	BG_DEF = false;
 	UNSHARP_DEF = false;
 	PROJ_METHOD_DEF = "Max Intensity";
-	REM_SL_DEF = false;
 	SAVE_DEF="In a folder next to the source folder";
 
 	// Get the folder name
@@ -44,6 +46,7 @@ macro "Make_Projections" {
 
 	// Creation of the dialog box
 	Dialog.create("Make_Projections Options");
+	Dialog.addCheckbox("Register Stacks", REG_DEF);
 	Dialog.addCheckbox("Remove Lower Slices", REM_SL_DEF);
 	Dialog.addCheckbox("Outlier filtering before projection", SIGMA_DEF);
 	Dialog.addCheckbox("Background subtraction before projection", BG_DEF);
@@ -53,6 +56,7 @@ macro "Make_Projections" {
 	Dialog.show();
 
 	// Feeding variables from dialog choices
+	REG = Dialog.getCheckbox();
 	REM_SL = Dialog.getCheckbox();
 	SIGMA = Dialog.getCheckbox();
 	BG = Dialog.getCheckbox();
@@ -75,7 +79,7 @@ macro "Make_Projections" {
 
 //*************** Prepare processing ***************
 
-	setBatchMode(true);
+	if (REG == false) setBatchMode(true);
 
 	// Create the output folder
 	OUTPUT_DIR="Void";
@@ -149,6 +153,19 @@ macro "Make_Projections" {
 			open(FILE_PATH);
 			STACK_ID = getImageID();
 
+			
+			// Register Z-stacks using HyperStackReg
+			if (REG == true) {
+				setSlice(1);
+				run("HyperStackReg ", "transformation=Translation channel1");
+				OUTPUT_ID = getImageID();
+				selectImage(STACK_ID);
+				close();
+				STACK_ID = OUTPUT_ID;
+				// selectImage(STACK_ID);
+				print("stabilized Stack");
+			}
+		
 			// Remove lower slices (below the slice that has the maximum mean intensity)
 			if (REM_SL == true) {
 				run("Select All");
@@ -167,6 +184,7 @@ macro "Make_Projections" {
 				for (i = 1; i < MaxI; i++) run("Delete Slice");
 				print("removed slices 1 to" + MaxI);
 			}
+
 
 			// Optional outlier pixels filtering before projection
 			if (SIGMA == true) {
@@ -197,7 +215,7 @@ macro "Make_Projections" {
 			close();
 
 			// Close input stack
-			selectImage(STACK_ID);
+			// selectImage(STACK_ID);
 			close();
 
 		}// end of IF loop on tif extensions
@@ -205,7 +223,7 @@ macro "Make_Projections" {
 
 
 
-	setBatchMode("exit and display");
+	if (REG == false) setBatchMode("exit and display");
 	print("");
 	print("*** Make_Projections end ***");
 	showStatus("Make Projections finished");

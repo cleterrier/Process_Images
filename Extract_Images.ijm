@@ -127,7 +127,7 @@ macro "Extract_Images" {
 //		print(FILE_NAME);
 //		print(IM_TYPE);
 
-		if (IM_TYPE == "true" || ALL_EXT[n] == ".nd2") {
+		if ((IM_TYPE == "true" && ALL_EXT[n] != ".tif") || ALL_EXT[n] == ".nd2") {
 
 //		Bio Format Importer to open the multi-channel images
 //			Get the file path
