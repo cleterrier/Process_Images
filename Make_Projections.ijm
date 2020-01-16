@@ -155,7 +155,7 @@ macro "Make_Projections" {
 
 			
 			// Register Z-stacks using HyperStackReg
-			if (REG == true) {
+			if (nSlices > 1 && REG == true) {
 				setSlice(1);
 				run("HyperStackReg ", "transformation=Translation channel1");
 				OUTPUT_ID = getImageID();
@@ -167,7 +167,7 @@ macro "Make_Projections" {
 			}
 		
 			// Remove lower slices (below the slice that has the maximum mean intensity)
-			if (REM_SL == true) {
+			if (nSlices > 1 && REM_SL == true) {
 				run("Select All");
 				setSlice(1);
 				getStatistics(RoiA, MaxM);
