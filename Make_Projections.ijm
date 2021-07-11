@@ -38,7 +38,7 @@ macro "Make_Projections" {
 	print("INPUT_DIR :"+INPUT_DIR);
 
 	// Initialize choices variables
-	PROJ_ARRAY = newArray("None", "Max Intensity", "Average Intensity", "Sum Slices");
+	PROJ_ARRAY = newArray("None", "Max Intensity", "Average Intensity", "Sum Slices", "EDF");
 	SAVE_ARRAY = newArray("In the source folder", "In a subfolder of the source folder", "In a folder next to the source folder", "In a subfolder with custom location");
 
 
@@ -201,12 +201,21 @@ macro "Make_Projections" {
 			}
 
 			// Perform the projection
-			if (nSlices > 1 && PROJ_METHOD != "None") run("Z Project...", " projection=[" + PROJ_METHOD + "]");
-			else run("Duplicate...", "title=dummy duplicate");
+			if (nSlices > 1 && PROJ_METHOD != "None" && PROJ_METHOD != "EDF") run("Z Project...", " projection=[" + PROJ_METHOD + "]");
+			else if (nSlices == 1 || PROJ_METHOD == "None") run("Duplicate...", "title=dummy duplicate");
+			else if (nSlices > 1 && PROJ_METHOD == "EDF") {
+				run("Easy mode...", "quality='4' topology='0' show-topology='off' show-view='off'");
+				while (isOpen("Output") == false) wait(100);
+				selectWindow("Output");
+			}
 			PROJ_ID = getImageID();
 
+			// Close input stack
+			selectImage(STACK_ID);
+			close();
 
 			// Create output file path and save the output image
+			selectImage(PROJ_ID);
 			OUTPUT_PATH = OUTPUT_DIR + substring(FILE_NAME, 0, lengthOf(FILE_NAME) - 8) + substring(FILE_NAME, lengthOf(FILE_NAME) - 8, lengthOf(FILE_NAME));
 			save(OUTPUT_PATH);
 			print("OUTPUT_PATH: "+OUTPUT_PATH);
@@ -214,9 +223,7 @@ macro "Make_Projections" {
 			// Close output image if checked
 			close();
 
-			// Close input stack
-			// selectImage(STACK_ID);
-			close();
+
 
 		}// end of IF loop on tif extensions
 	}// end of FOR loop on all files
