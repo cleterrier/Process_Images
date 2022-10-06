@@ -21,6 +21,7 @@ macro "Extract_Images" {
 	RESET_SCALE_DEF = false;
 	CATCH_ROIS_DEF = false;
 	SPLIT_DEF = true;
+	CONVERT_DEF = true;
 	SAVE_DEF = "In a folder next to the source folder";
 	POS_DEF = false;
 
@@ -44,6 +45,7 @@ macro "Extract_Images" {
 	Dialog.addCheckbox("Reset Spatial Scale", RESET_SCALE_DEF);
 	Dialog.addCheckbox("Catch ROIs", CATCH_ROIS_DEF);
 	Dialog.addCheckbox("Split Channels", SPLIT_DEF);
+	Dialog.addCheckbox("Convert 32-bit to 16-bit", CONVERT_DEF);
 	Dialog.addChoice("Save Images", SAVE_ARRAY, SAVE_DEF);
 	Dialog.addCheckbox("Save position in name", POS_DEF);
 	Dialog.show();
@@ -52,6 +54,7 @@ macro "Extract_Images" {
 	RESET_SCALE = Dialog.getCheckbox();
 	CATCH_ROIS = Dialog.getCheckbox();
 	SPLIT_CH = Dialog.getCheckbox();
+	CONVERT = Dialog.getCheckbox();
 	SAVE_TYPE = Dialog.getChoice();
 	POS = Dialog.getCheckbox();
 
@@ -195,8 +198,10 @@ macro "Extract_Images" {
 
 
 //			If option checked, breaks the multi-channel image appart and saves as individual tifs
-			if (SPLIT_CH == true && nSlices > 1) {
+			if (SPLIT_CH == true && CHANNEL_COUNT > 1) {
+			
 				run("Split Channels");
+
 //				Loop on each channel (each opened window)
 				for(j = 0; j < CHANNEL_COUNT; j++) {
 
@@ -207,23 +212,77 @@ macro "Extract_Images" {
 //					Select source image
 					selectWindow(SOURCE_WINDOW_NAME);
 					resetMinAndMax();
+					
+//					Convert from 32-bit to 16-bit, normalizing accross the stack to avoid any saturation
+					if (bitDepth() == 32 && CONVERT == true) {
+						run("Enhance Contrast...", "saturated=0 normalize process_all use");
+						setMinAndMax(0, 1);
+						run("16-bit");
+						setMinAndMax(0, 65535);
+					}
 
 //					Create output file path and save the output image
 					OUTPUT_PATH = OUTPUT_DIR + FILE_SHORTNAME + postring + "-C=" + j + ".tif";
 					save(OUTPUT_PATH);
 					print("OUTPUT_PATH: " + OUTPUT_PATH);
-					close();
-				}	// end of FOR loop on channels
+					close();			
+				}	// end of for loop on channels
 			}
 
 			else {
+				
+//				32-bit conversion requires splitting and re-merging channels if mutli-channel
+				if (bitDepth() == 32 && CONVERT == true) {
+					
+//					Multi-channel case
+					if (CHANNEL_COUNT > 1) {
+						CHAN_NAMES = newArray(CHANNEL_COUNT);
+						MERGE_STRING = "";
+						run("Split Channels");
+	
+//						Loop on stacks generated from channels					
+						for(j = 0; j < CHANNEL_COUNT; j++) {
+	
+//							Construct window name (from the names created by the "Split Channels" command) and merge string
+							TEMP_CHANNEL = d2s(j+1,0);
+							CHAN_NAMES[j] = "C" + TEMP_CHANNEL +  "-" + FILE_NAME;
+							MERGE_STRING = MERGE_STRING + "c" + (j+1) + "=" + CHAN_NAMES[j] + " ";
+		
+//							Select source image
+							selectWindow(CHAN_NAMES[j]);
+							resetMinAndMax();
+							
+//							Convert from 32-bit to 16-bit, normalizing accross the stack to avoid any saturation						
+							run("Enhance Contrast...", "saturated=0 normalize process_all use");
+							setMinAndMax(0, 1);
+							run("16-bit");
+							setMinAndMax(0, 65535);
+	
+						} // end of loop on channels
+						
+//						Re-merge all channels
+						print(MERGE_STRING);					
+						run("Merge Channels...", MERGE_STRING + "create");
+					}
+					
+//					Single-channel case
+					else {
+//							Convert from 32-bit to 16-bit, normalizing accross the stack to avoid any saturation						
+							run("Enhance Contrast...", "saturated=0 normalize process_all use");
+							setMinAndMax(0, 1);
+							run("16-bit");
+							setMinAndMax(0, 65535);				
+					}
+					
+				}
+								
 				// Create output file path and save the output image
 				OUTPUT_PATH = OUTPUT_DIR + FILE_SHORTNAME + postring + ".tif";
 				save(OUTPUT_PATH);
 				print("OUTPUT_PATH: " + OUTPUT_PATH);
 				close();
 			}
-		}	// end of IF loop on zvi extensions
+		}	// end of IF loop on image extensions
 	}	// end of FOR loop on n extensions
 
 //*************** Cleanup and end ***************
