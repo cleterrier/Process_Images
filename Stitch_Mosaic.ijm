@@ -11,11 +11,11 @@
 macro "Stitch_Mosaic" {
 
 	setOption("ExpandableArrays", true);
-	Enhance = true; // Enhance images in addition to fusing them (background subtraction, unsharp mask, contrast enhancement)
+	Enhance = false; // Enhance images in addition to fusing them (background subtraction, unsharp mask, contrast enhancement)
 	rb_diam = 50; // diameter of the rolling ball for background substraction (50 for a 512x512 image is OK)
 	um_mask = 0.3; // weight of the mask for unsharp mark (closer to 1 = sharper)
 	cSat = 0.01; // % saturation for contrast enhancement
-	posdata = true; // use stage position in image metadata (Nikon version)
+	posdata = false; // use stage position in image metadata (Nikon version)
 
 	// Get the folder name
 	inDir = getDirectory("Select a directory full of tif images");
@@ -160,7 +160,7 @@ macro "Stitch_Mosaic" {
 			open(insideNames[0]);
 			if (nSlices > 1) Stack.setDisplayMode("composite");
 		}
-		// Enhance fused image (contrast enhancement looping on channels
+		// Enhance fused image (contrast enhancement looping on channels)
 		if (Enhance == true) {
 			getDimensions(w, h, ch, sl, fr);
 			for (j = 0; j < ch; j++) {
