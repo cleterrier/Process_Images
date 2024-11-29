@@ -132,7 +132,7 @@ macro "Split_Channels_Batch" {
 				// Optional enhancement
 				if (ENH == true) {
 					run("Subtract Background...", "rolling=" + ROLLING_DIAM + " stack");
-					run("Unsharp Mask...", "radius=1 mask=" + UNSHARP_MASK + " stack");
+					// run("Unsharp Mask...", "radius=1 mask=" + UNSHARP_MASK + " stack");
 					run("Enhance Contrast...", "saturated=" + SAT);
 				}
 				else {

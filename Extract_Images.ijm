@@ -8,6 +8,7 @@
 // 3.3 20-01-2016 tweaked the save otions to be more versatile
 // 3.4 04-05-2016 added position in name option
 // 3.5 19-11-2016 test type using BioFormat
+// 4.0 20-03-2024 added subtraction of minimum from first slice, added series concatenation for some nd2 files
 
 
 macro "Extract_Images" {
@@ -22,6 +23,7 @@ macro "Extract_Images" {
 	CATCH_ROIS_DEF = false;
 	SPLIT_DEF = true;
 	CONVERT_DEF = true;
+	SUB_DEF = false;
 	SAVE_DEF = "In a folder next to the source folder";
 	POS_DEF = false;
 
@@ -31,7 +33,7 @@ macro "Extract_Images" {
 
 //*************** Dialog 1 : get the input images folder path ***************
 
-	INPUT_DIR = getDirectory("Select a source folder with raw images");
+	INPUT_DIR = getDir("Select a source folder with raw images");
 
 	print("\n\n\n*** Extract_Images Log ***");
 	print("");
@@ -46,6 +48,7 @@ macro "Extract_Images" {
 	Dialog.addCheckbox("Catch ROIs", CATCH_ROIS_DEF);
 	Dialog.addCheckbox("Split Channels", SPLIT_DEF);
 	Dialog.addCheckbox("Convert 32-bit to 16-bit", CONVERT_DEF);
+	Dialog.addCheckbox("Subtract first frame minimum", SUB_DEF);
 	Dialog.addChoice("Save Images", SAVE_ARRAY, SAVE_DEF);
 	Dialog.addCheckbox("Save position in name", POS_DEF);
 	Dialog.show();
@@ -55,6 +58,7 @@ macro "Extract_Images" {
 	CATCH_ROIS = Dialog.getCheckbox();
 	SPLIT_CH = Dialog.getCheckbox();
 	CONVERT = Dialog.getCheckbox();
+	SUB = Dialog.getCheckbox();
 	SAVE_TYPE = Dialog.getChoice();
 	POS = Dialog.getCheckbox();
 
@@ -170,7 +174,7 @@ macro "Extract_Images" {
 			}
 
 //			Open input image
-			run("Bio-Formats Importer", "open=[" + FILE_PATH + "] " + "view=Hyperstack" + " color_mode=Grayscale stack_order=Default " + DISPLAY);
+			run("Bio-Formats Importer", "open=[" + FILE_PATH + "] " + "view=Hyperstack" + " autoscale color_mode=Grayscale concatenate_series open_all_series stack_order=Default " + DISPLAY);
 			print("Bio-Formats Importer launched");
 			FILE_TITLE = getTitle();
 			FILE_ID = getImageID();
@@ -220,6 +224,17 @@ macro "Extract_Images" {
 						setMinAndMax(0, 1);
 						run("16-bit");
 						setMinAndMax(0, 65535);
+						resetMinAndMax;
+					}
+
+					// Subtract minimum intensity value from first slice (minus borders)
+					if (SUB == true) {
+						getDimensions(Iwidth, Iheight, Ichannels, Islices, Iframes);
+						makeRectangle(25, 25, Iwidth-50, Iheight-50);
+						getStatistics(Iarea, Imean, Imin, Imax);
+						run("Select None");
+						run("Subtract...", "value=" + Imin + " stack");
+						resetMinAndMax;	
 					}
 
 //					Create output file path and save the output image
@@ -258,6 +273,7 @@ macro "Extract_Images" {
 							setMinAndMax(0, 1);
 							run("16-bit");
 							setMinAndMax(0, 65535);
+							resetMinAndMax;
 	
 						} // end of loop on channels
 						
@@ -272,11 +288,23 @@ macro "Extract_Images" {
 							run("Enhance Contrast...", "saturated=0 normalize process_all use");
 							setMinAndMax(0, 1);
 							run("16-bit");
-							setMinAndMax(0, 65535);				
+							setMinAndMax(0, 65535);
+							resetMinAndMax;
 					}
 					
 				}
 								
+				// Subtract minimum intensity value from first slice (minus borders)
+				if (SUB == true) {
+					getDimensions(Iwidth, Iheight, Ichannels, Islices, Iframes);
+					makeRectangle(25, 25, Iwidth-50, Iheight-50);
+					getStatistics(Iarea, Imean, Imin, Imax);
+					run("Select None");
+					run("Subtract...", "value=" + Imin + " stack");
+					resetMinAndMax;	
+				}
+
+				
 				// Create output file path and save the output image
 				OUTPUT_PATH = OUTPUT_DIR + FILE_SHORTNAME + postring + ".tif";
 				save(OUTPUT_PATH);

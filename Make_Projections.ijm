@@ -31,7 +31,7 @@ macro "Make_Projections" {
 	SAVE_DEF="In a folder next to the source folder";
 
 	// Get the folder name
-	INPUT_DIR=getDirectory("Select the input stacks directory");
+	INPUT_DIR=getDir("Select the input stacks directory");
 
 	print("\n\n\n*** Make_Projections Log ***");
 	print("");
